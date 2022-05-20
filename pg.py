@@ -13,6 +13,8 @@ import torch.autograd as autograd
 
 from torch.autograd import Variable
 
+DEVICE = torch.device('cpu')
+
 MAX_EPISODES = 2000
 MAX_TIMESTEPS = 108000
 
@@ -21,7 +23,7 @@ GAMMA = 0.99
 
 class reinforce(nn.Module):
 
-    def __init__(self):
+    def __init__(self, advisor):
         super(reinforce, self).__init__()
         # policy network
         self.fc1 = nn.Linear(8, 128)
@@ -30,6 +32,8 @@ class reinforce(nn.Module):
         self.fc2 = nn.Linear(128, 128)
         self.fc3 = nn.Linear(128, 4)
         self.softmax = nn.Softmax()
+
+        self.advisor = advisor
 
     def forward(self, x):
         x = self.fc1(x)
@@ -45,14 +49,21 @@ class reinforce(nn.Module):
         state = torch.unsqueeze(state, 0)
         probs = self.forward(state)
         probs = torch.squeeze(probs, 0)
-        #actor = probs.detach().numpy()
-        #advice = [0.25, 0.25, 0.25, 0.25]
-        #mixed = actor*advice
-        #mixed /= mixed.sum()
-        #action = np.random.choice([0, 1, 2, 3], p=mixed)
-        action = probs.multinomial(num_samples=1)
-        action = action.data
-        action = action[0]
+        actor = probs.detach().numpy()
+
+
+        advice = self.advisor.forward(state)
+        advice = torch.squeeze(advice, 0)
+        advice = advice.detach().numpy()
+
+        mixed = actor*advice
+        mixed /= mixed.sum()
+        action = np.random.choice([0, 1, 2, 3], p=mixed)
+
+
+        #action = probs.multinomial(num_samples=1)
+        #action = action.data
+        #action = action[0]
         return action
 
     def pi(self, s, a):
@@ -73,13 +84,17 @@ class reinforce(nn.Module):
             loss.backward()
             optimizer.step()
 
+
 def main():
 
-    f = open('out-with_0.01epsilon_action1_lunarlander', 'w')
+    f = open('out-', 'w')
     env = gym.make('LunarLander-v2')
 
-    agent = reinforce()
+    advisor = torch.load("advisor-lunarlander", map_location=DEVICE)
+
+    agent = reinforce(advisor)
     optimizer = optim.Adam(agent.parameters(), lr=ALPHA)
+
 
     for i_episode in range(MAX_EPISODES):
 
@@ -94,10 +109,6 @@ def main():
 
             action = agent.get_action(state).item()
             #action = agent.get_action(state)
-
-            epsilon = 0.01
-            if random.random() < epsilon:
-                action = 1
 
             states.append(state)
             actions.append(action)
@@ -114,6 +125,7 @@ def main():
                 break
 
         agent.update_weight(states, actions, rewards, optimizer)
+        #torch.save(agent, "advisor-lunarlander")
 
     env.close()
 
