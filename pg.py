@@ -21,6 +21,12 @@ MAX_TIMESTEPS = 108000
 ALPHA = 3e-5
 GAMMA = 0.99
 
+def get_probas(state, agent):
+    probs = agent.forward(state)
+    probs = torch.squeeze(probs, 0)
+    return probs.detach().numpy()
+
+
 class reinforce(nn.Module):
 
     def __init__(self, advisor):
@@ -47,19 +53,13 @@ class reinforce(nn.Module):
     def get_action(self, state):
         state = Variable(torch.Tensor(state))
         state = torch.unsqueeze(state, 0)
-        probs = self.forward(state)
-        probs = torch.squeeze(probs, 0)
-        actor = probs.detach().numpy()
 
-
-        advice = self.advisor.forward(state)
-        advice = torch.squeeze(advice, 0)
-        advice = advice.detach().numpy()
+        actor = get_probas(state, self)
+        advice = get_probas(state, self.advisor)
 
         mixed = actor*advice
         mixed /= mixed.sum()
         action = np.random.choice([0, 1, 2, 3], p=mixed)
-
 
         #action = probs.multinomial(num_samples=1)
         #action = action.data
@@ -71,6 +71,8 @@ class reinforce(nn.Module):
         probs = self.forward(s)
         probs = torch.squeeze(probs, 0)
         return probs[a]
+
+
 
     def update_weight(self, states, actions, rewards, optimizer):
         G = Variable(torch.Tensor([0]))
@@ -103,12 +105,13 @@ def main():
         states = []
         actions = []
         rewards = [0]   # no reward at t = 0
+        advice = []
         cumulative = 0.0
 
         for timesteps in range(MAX_TIMESTEPS):
 
-            action = agent.get_action(state).item()
-            #action = agent.get_action(state)
+            #action = agent.get_action(state).item()
+            action = agent.get_action(state)
 
             states.append(state)
             actions.append(action)
