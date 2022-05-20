@@ -14,6 +14,7 @@ import torch.autograd as autograd
 from torch.autograd import Variable
 
 DEVICE = torch.device('cpu')
+LC = True
 
 MAX_EPISODES = 2000
 MAX_TIMESTEPS = 108000
@@ -24,7 +25,7 @@ GAMMA = 0.99
 def get_probas(state, agent):
     probs = agent.forward(state)
     probs = torch.squeeze(probs, 0)
-    return probs.detach().numpy()
+    return probs
 
 
 class reinforce(nn.Module):
@@ -55,15 +56,16 @@ class reinforce(nn.Module):
         state = torch.unsqueeze(state, 0)
 
         actor = get_probas(state, self)
-        advice = get_probas(state, self.advisor)
-
+        actor = actor.detach().numpy()
+        if self.advisor != None:
+            advice = get_probas(state, self.advisor)
+            advice = advice.detach().numpy()
+        else:
+            advice = [1.0, 1.0, 1.0, 1.0]
         mixed = actor*advice
         mixed /= mixed.sum()
         action = np.random.choice([0, 1, 2, 3], p=mixed)
 
-        #action = probs.multinomial(num_samples=1)
-        #action = action.data
-        #action = action[0]
         return action
 
     def pi(self, s, a):
@@ -80,7 +82,17 @@ class reinforce(nn.Module):
         # r_tt represents r_{t+1}
         for s_t, a_t, r_tt in zip(states[::-1], actions[::-1], rewards[::-1]):
             G = Variable(torch.Tensor([r_tt])) + GAMMA * G
-            loss = (-1.0) * G * torch.log(self.pi(s_t, a_t))
+            # learning correction
+            if LC:
+                s_t = Variable(torch.Tensor([s_t]))
+                advice = get_probas(s_t, self.advisor)
+                actor = get_probas(s_t, self)
+                mixed = actor*advice
+                mixed /= mixed.sum()
+                mixed_proba = Variable(torch.Tensor([mixed[a_t]]), requires_grad=True)
+                loss = (-1.0) * G * torch.log(mixed_proba)
+            else:
+                loss = (-1.0) * G * torch.log(self.pi(s_t, a_t))
             # update policy parameter \theta
             optimizer.zero_grad()
             loss.backward()
@@ -89,10 +101,11 @@ class reinforce(nn.Module):
 
 def main():
 
-    f = open('out-', 'w')
+    f = open('out-mixed_withLC', 'w')
     env = gym.make('LunarLander-v2')
 
     advisor = torch.load("advisor-lunarlander", map_location=DEVICE)
+    #advisor = None
 
     agent = reinforce(advisor)
     optimizer = optim.Adam(agent.parameters(), lr=ALPHA)
@@ -110,7 +123,6 @@ def main():
 
         for timesteps in range(MAX_TIMESTEPS):
 
-            #action = agent.get_action(state).item()
             action = agent.get_action(state)
 
             states.append(state)
