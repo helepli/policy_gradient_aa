@@ -12,7 +12,7 @@ This implementation of REINFORCE is from https://github.com/sonic1sonic/Monte-Ca
 
 In this experiment, we train an agent without the guidance of an advisory policy for 2000 episodes on Lunar Lander. We then freeze it and save it to use it as an advisor. We launch two fresh REINFORCE agents learning learnign while being advised/guided by our advisor agent trained before, which we load. One of our two advisees only uses the Policy Shaping formula at acting time, without the learning correction in the loss, the other uses both the Policy Shaping formula at acting time and the learning correction in the loss.
 
-Our results show that REINFORCE needs a learning correction to be able to learn well and exploit the advice of the previously trained advisor agent, otherwise performance plummets.
+Our results show that REINFORCE needs a learning correction to be able to learn well and exploit the advice of the previously trained advisor agent, otherwise performance plummets (see plot_lunarlander-pg-LC.pdf).
 
 ## References
 <a id="1">[1]Plisnier, H., Steckelmacher, D., Brys, T., Roijers, D., Nowé, A., "Directed Policy Gradient for Safe Reinforcement Learning with Human Advice", 2018, European Workshop On Reinforcement Learning 14 (EWRL14)</a>
