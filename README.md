@@ -15,10 +15,10 @@ In this experiment, we train an agent without the guidance of an advisory policy
 Our results show that REINFORCE needs a learning correction to be able to learn well and exploit the advice of the previously trained advisor agent, otherwise performance plummets.
 
 ## References
-<a id="1">[1]</a>
-Plisnier, H., Steckelmacher, D., Brys, T., Roijers, D., Nowé, A., "Directed Policy Gradient for Safe Reinforcement Learning with Human Advice", 2018, European Workshop On Reinforcement Learning 14 (EWRL14)
-<a id="2">[2]</a>
-Griffith, S., Subramanian, K., Scholz, J., Isbell, C. L., Andrea T. L., "Policy shaping: Integrating human feedback with reinforcement learning", Advances in neural information processing systems 2013
-<a id="3">[3]</a>
-Sutton, R., McAllester, D., Singh, S., Mansour, Y., "Policy Gradient Methods for Reinforcement Learning with Function Approximation", Neural Information Processing Systems (NIPS) 2000
+<a id="1">Plisnier, H., Steckelmacher, D., Brys, T., Roijers, D., Nowé, A., "Directed Policy Gradient for Safe Reinforcement Learning with Human Advice", 2018, European Workshop On Reinforcement Learning 14 (EWRL14)</a>
+
+<a id="2">Griffith, S., Subramanian, K., Scholz, J., Isbell, C. L., Andrea T. L., "Policy shaping: Integrating human feedback with reinforcement learning", Advances in neural information processing systems 2013</a>
+
+<a id="3">Sutton, R., McAllester, D., Singh, S., Mansour, Y., "Policy Gradient Methods for Reinforcement Learning with Function Approximation", Neural Information Processing Systems (NIPS) 2000
+</a>
 
