@@ -2,7 +2,7 @@
 
 The Actor-Advisor [[1]](#1) is a Policy Shaping method based on the Policy Intersection formula [[2]](#2), adapted to Policy Gradient methods. This adapation consists in modifying the loss of Policy Gradient to insorporate the policy of the advisor when updating the actor's policy:
 
-<img src="https://latex.codecogs.com/svg.latex?\Large&space;x=\frac{-b\pm\sqrt{b^2-4ac}}{2a}" title="\Large x=\frac{-b\pm\sqrt{b^2-4ac}}{2a}" />
+<img src="https://latex.codecogs.com/svg.latex?\Large&space; \mathcal{L} = - \sum\limits_{t=0}^{T} \mathcal{R}_t \log (\pi_{\theta} (a_t | s_t))" title="\Large \mathcal{L} = - \sum\limits_{t=0}^{T} \mathcal{R}_t \log (\pi_{\theta} (a_t | s_t))" />
 
 
 
