@@ -2,7 +2,7 @@
 
 The Actor-Advisor [[1]](#1) is a Policy Shaping method based on the Policy Intersection formula [[2]](#2), adapted to Policy Gradient methods. At acting time, the agent samples the mixture of its policy and of an advisory policy, following the Policy Shaping formula in [[2]](#2):
 
-<img src="https://latex.codecogs.com/svg.latex?\Large&space;a_t\sim\pi_L(s_t)\times\pi_A(s_t)=\frac{\overbrace{\pi_L(s_t)\,\pi_A(s_t)}^{\text{element-wise product}}}{\underbrace{\pi_L(s_t)\cdot\pi_A(s_t)}_{\sum_{a\inA\pi_L(a|s_t)\pi_A(a|s_t)}}" title="\Large a_t\sim\pi_L(s_t)\times\pi_A(s_t)=\frac{\overbrace{\pi_L(s_t)\,\pi_A(s_t)}^{\text{element-wise product}}}{\underbrace{\pi_L(s_t)\cdot\pi_A(s_t)}_{\sum_{a\inA\pi_L(a|s_t)\pi_A(a|s_t)}}" />
+<img src="https://latex.codecogs.com/svg.latex?\Large&space;a_t\sim\pi_L(s_t)\times\pi_A(s_t)=\frac{\overbrace{\pi_L(s_t)\,\pi_A(s_t)}^{\text{element-wise product}}}{\underbrace{\pi_L(s_t)\cdot\pi_A(s_t)}_{\sum_{a\in A\pi_L(a|s_t)\pi_A(a|s_t)}}" title="\Large a_t\sim\pi_L(s_t)\times\pi_A(s_t)=\frac{\overbrace{\pi_L(s_t)\,\pi_A(s_t)}^{\text{element-wise product}}}{\underbrace{\pi_L(s_t)\cdot\pi_A(s_t)}_{\sum_{a\in A\pi_L(a|s_t)\pi_A(a|s_t)}}" />
 
 The adapation required for Policy Gradient to allow an advisory policy to be mixed with the policy it is currently learning is to incoprorate the advisory policy in the loss:
 
