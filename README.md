@@ -1,6 +1,6 @@
 # Policy Gradient REINFORCE with the Actor-Advisor (Policy Intersection + Learning correction)
 
-The Actor-Advisor [[1]](#1) is a Policy Shaping method based on the Policy Intersection formula [[2]](#2), adapted to Policy Gradient methods. At acting time, the agent samples the mixture of its policy and of an advisory policy, following the Policy Shaping formula in [[2]](#2):
+The Actor-Advisor [[1]](#1) is a Policy Shaping method based on the Policy Intersection formula [[2]](#2), adapted to Policy Gradient methods [[3]](#3). At acting time, the agent samples the mixture of its policy and of an advisory policy, following the Policy Shaping formula in [[2]](#2):
 
 <img src="https://latex.codecogs.com/svg.latex?\Large&space;a_t\sim\pi_L(s_t)\times\pi_A(s_t)=\frac{\pi_L(s_t)\,\pi_A(s_t)}{\pi_L(s_t)\cdot\pi_A(s_t)}" title="\Large a_t\sim\pi_L(s_t)\times\pi_A(s_t)=\frac{\pi_L(s_t)\,\pi_A(s_t)}{\pi_L(s_t)\cdot\pi_A(s_t)}" />
 
@@ -8,67 +8,17 @@ The adapation required for Policy Gradient to allow an advisory policy to be mix
 
 <img src="https://latex.codecogs.com/svg.latex?\Large&space;loss=-\sum\limits_{t=0}^{T}G_t\log(\pi_{\theta}(a_t|s_t)\times\pi_A(a_t|s_t))" title="\Large loss=-\sum\limits_{t=0}^{T}G_t\log(\pi_{\theta}(a_t|s_t)\times\pi_A(a_t|s_t))" />
 
+This implementation of REINFORCE is from https://github.com/sonic1sonic/Monte-Carlo-Policy-Gradient-REINFORCE/blob/master/REINFORCE.py
+
+In this experiment, we train an agent without the guidance of an advisory policy for 2000 episodes on Lunar Lander. We then freeze it and save it to use it as an advisor. We launch two fresh REINFORCE agents learning learnign while being advised/guided by our advisor agent trained before, which we load. One of our two advisees only uses the Policy Shaping formula at acting time, without the learning correction in the loss, the other uses both the Policy Shaping formula at acting time and the learning correction in the loss.
+
+Our results show that REINFORCE needs a learning correction to be able to learn well and exploit the advice of the previously trained advisor agent, otherwise performance plummets.
+
 ## References
 <a id="1">[1]</a>
-Helene plisnier
+Plisnier, H., Steckelmacher, D., Brys, T., Roijers, D., Nowé, A., "Directed Policy Gradient for Safe Reinforcement Learning with Human Advice", 2018, European Workshop On Reinforcement Learning 14 (EWRL14)
 <a id="2">[2]</a>
-Griffith et al Polocy Shaping
+Griffith, S., Subramanian, K., Scholz, J., Isbell, C. L., Andrea T. L., "Policy shaping: Integrating human feedback with reinforcement learning", Advances in neural information processing systems 2013
+<a id="3">[3]</a>
+Sutton, R., McAllester, D., Singh, S., Mansour, Y., "Policy Gradient Methods for Reinforcement Learning with Function Approximation", Neural Information Processing Systems (NIPS) 2000
 
-## Description
-
-An in-depth paragraph about your project and overview of use.
-
-## Getting Started
-
-### Dependencies
-
-* Describe any prerequisites, libraries, OS version, etc., needed before installing program.
-* ex. Windows 10
-
-### Installing
-
-* How/where to download your program
-* Any modifications needed to be made to files/folders
-
-### Executing program
-
-* How to run the program
-* Step-by-step bullets
-```
-code blocks for commands
-```
-
-## Help
-
-Any advise for common problems or issues.
-```
-command to run if program contains helper info
-```
-
-## Authors
-
-Contributors names and contact info
-
-ex. Dominique Pizzie
-ex. [@DomPizzie](https://twitter.com/dompizzie)
-
-## Version History
-
-* 0.2
-    * Various bug fixes and optimizations
-    * See [commit change]() or See [release history]()
-* 0.1
-    * Initial Release
-
-## License
-
-This project is licensed under the [NAME HERE] License - see the LICENSE.md file for details
-
-## Acknowledgments
-
-Inspiration, code snippets, etc.
-* [awesome-readme](https://github.com/matiassingers/awesome-readme)
-* [PurpleBooth](https://gist.github.com/PurpleBooth/109311bb0361f32d87a2)
-* [dbader](https://github.com/dbader/readme-template)
-* [zenorocha](https://gist.github.com/zenorocha/4526327)
-* [fvcproductions](https://gist.github.com/fvcproductions/1bfc2d4aecb01a834b46)
