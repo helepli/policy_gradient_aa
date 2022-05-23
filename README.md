@@ -1,9 +1,9 @@
 # Policy Gradient REINFORCE with the Actor-Advisor (Policy Intersection + Learning correction)
 
-The Actor-Advisor [[1]](#1) is a Policy Shaping method based on the Policy Intersection formula [[2]](#2), adapted to Policy Gradient methods. This adapation consists in modifying the loss of Policy Gradient to insorporate the policy of the advisor (pi_A) when updating the actor's policy (pi_L): loss = - sum(G_t log (pi_L(a_t, s_t) times p_A(a_t, s_t)))
+The Actor-Advisor [[1]](#1) is a Policy Shaping method based on the Policy Intersection formula [[2]](#2), adapted to Policy Gradient methods. This adapation consists in modifying the loss of Policy Gradient to insorporate the policy of the advisor (pi_A) when updating the actor's policy (pi):
 
 
-<img src="https://latex.codecogs.com/svg.latex?\Large&space;loss=-\sum\limits_{t=0}^{T}G_t\log(\pi_{\theta}(a_t|s_t))" title="\Large loss=-\sum\limits_{t=0}^{T}G_t\log(\pi_{\theta}(a_t|s_t))" />
+<img src="https://latex.codecogs.com/svg.latex?\Large&space;loss=-\sum\limits_{t=0}^{T}G_t\log(\pi_{\theta}(a_t|s_t)\times\pi_A(a_t|s_t))" title="\Large loss=-\sum\limits_{t=0}^{T}G_t\log(\pi_{\theta}(a_t|s_t)\times\pi_A(a_t|s_t))" />
 
 ## References
 <a id="1">[1]</a>
