@@ -1,7 +1,10 @@
 # Policy Gradient REINFORCE with the Actor-Advisor (Policy Intersection + Learning correction)
 
-The Actor-Advisor [[1]](#1) is a Policy Shaping method based on the Policy Intersection formula [[2]](#2), adapted to Policy Gradient methods. This adapation consists in modifying the loss of Policy Gradient to insorporate the policy of the advisor (pi_A) when updating the actor's policy (pi):
+The Actor-Advisor [[1]](#1) is a Policy Shaping method based on the Policy Intersection formula [[2]](#2), adapted to Policy Gradient methods. At acting time, the agent samples the mixture of its policy and of an advisory policy, following the Policy Shaping formula in [[2]](#2):
 
+<img src="https://latex.codecogs.com/svg.latex?\Large&space;a_t\sim\pi_L(s_t)\times\pi_A(s_t)=\frac{\overbrace{\pi_L(s_t)\,\pi_A(s_t)}^{\text{element-wise product}}}{\underbrace{\pi_L(s_t)\cdot\pi_A(s_t)}_{\sum_{a\inA\pi_L(a|s_t)\pi_A(a|s_t)}}" title="\Large a_t\sim\pi_L(s_t)\times\pi_A(s_t)=\frac{\overbrace{\pi_L(s_t)\,\pi_A(s_t)}^{\text{element-wise product}}}{\underbrace{\pi_L(s_t)\cdot\pi_A(s_t)}_{\sum_{a\inA\pi_L(a|s_t)\pi_A(a|s_t)}}" />
+
+The adapation required for Policy Gradient to allow an advisory policy to be mixed with the policy it is currently learning is to incoprorate the advisory policy in the loss:
 
 <img src="https://latex.codecogs.com/svg.latex?\Large&space;loss=-\sum\limits_{t=0}^{T}G_t\log(\pi_{\theta}(a_t|s_t)\times\pi_A(a_t|s_t))" title="\Large loss=-\sum\limits_{t=0}^{T}G_t\log(\pi_{\theta}(a_t|s_t)\times\pi_A(a_t|s_t))" />
 
