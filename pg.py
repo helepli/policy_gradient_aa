@@ -89,7 +89,7 @@ class reinforce(nn.Module):
                 actor = get_probas(s_t, self)
                 mixed = actor*advice
                 mixed /= mixed.sum()
-                mixed_proba = Variable(torch.Tensor([mixed[a_t]]), requires_grad=True)
+                mixed_proba = mixed[a_t]
                 loss = (-1.0) * G * torch.log(mixed_proba)
             else:
                 loss = (-1.0) * G * torch.log(self.pi(s_t, a_t))
@@ -101,7 +101,7 @@ class reinforce(nn.Module):
 
 def main():
 
-    f = open('out-mixed_withLC', 'w')
+    f = open('out-mixed_withLC_fixed', 'w')
     env = gym.make('LunarLander-v2')
 
     advisor = torch.load("advisor-lunarlander", map_location=DEVICE)
