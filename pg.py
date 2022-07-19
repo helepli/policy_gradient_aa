@@ -13,13 +13,15 @@ import torch.autograd as autograd
 
 from torch.autograd import Variable
 
+import gym_envs
+
 DEVICE = torch.device('cpu')
 LC = True
 
 MAX_EPISODES = 2000
 MAX_TIMESTEPS = 108000
 
-ALPHA = 3e-5
+ALPHA = 1e-6
 GAMMA = 0.99
 
 def get_probas(state, agent):
@@ -30,14 +32,24 @@ def get_probas(state, agent):
 
 class reinforce(nn.Module):
 
-    def __init__(self, advisor):
+    def __init__(self, advisor, env):
         super(reinforce, self).__init__()
         # policy network
-        self.fc1 = nn.Linear(8, 128)
+
+        state_shape = env.observation_space.shape[0]
+        print('State shape:', state_shape)
+
+        aspace = env.action_space
+        aspace = [aspace]
+        num_actions = int(np.prod([a.n for a in aspace]))
+        print('Number of actions:', num_actions)
+
+
+        self.fc1 = nn.Linear(state_shape, 128)
         self.relu = nn.ReLU(inplace=True)
         self.tanh = nn.Tanh()
         self.fc2 = nn.Linear(128, 128)
-        self.fc3 = nn.Linear(128, 4)
+        self.fc3 = nn.Linear(128, num_actions)
         self.softmax = nn.Softmax()
 
         self.advisor = advisor
@@ -83,11 +95,11 @@ class reinforce(nn.Module):
         for s_t, a_t, r_tt in zip(states[::-1], actions[::-1], rewards[::-1]):
             G = Variable(torch.Tensor([r_tt])) + GAMMA * G
             # learning correction
-            if LC:
+            if self.advisor != None and LC:
                 s_t = Variable(torch.Tensor([s_t]))
                 advice = get_probas(s_t, self.advisor)
                 actor = get_probas(s_t, self)
-                mixed = actor*advice
+                mixed = actor+advice
                 mixed /= mixed.sum()
                 mixed_proba = mixed[a_t]
                 loss = (-1.0) * G * torch.log(mixed_proba)
@@ -101,13 +113,13 @@ class reinforce(nn.Module):
 
 def main():
 
-    f = open('out-mixed_withLC_fixed', 'w')
+    f = open("out-lunarlander-sum"+str(random.random()).strip('0.'), 'w')
     env = gym.make('LunarLander-v2')
 
     advisor = torch.load("advisor-lunarlander", map_location=DEVICE)
     #advisor = None
 
-    agent = reinforce(advisor)
+    agent = reinforce(advisor, env)
     optimizer = optim.Adam(agent.parameters(), lr=ALPHA)
 
 
@@ -140,7 +152,7 @@ def main():
                 break
 
         agent.update_weight(states, actions, rewards, optimizer)
-        #torch.save(agent, "advisor-lunarlander")
+        #torch.save(agent, "advisor-grid1")
 
     env.close()
 
