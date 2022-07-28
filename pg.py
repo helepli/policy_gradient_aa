@@ -12,13 +12,12 @@ import torch.optim as optim
 import torch.autograd as autograd
 
 from torch.autograd import Variable
+import argparse
 
 import gym_envs
 
 DEVICE = torch.device('cpu')
-LC = True
 
-MAX_EPISODES = 2000
 MAX_TIMESTEPS = 108000
 
 ALPHA = 1e-6
@@ -32,7 +31,7 @@ def get_probas(state, agent):
 
 class reinforce(nn.Module):
 
-    def __init__(self, advisor, env):
+    def __init__(self, advisor, args, env):
         super(reinforce, self).__init__()
         # policy network
 
@@ -53,6 +52,7 @@ class reinforce(nn.Module):
         self.softmax = nn.Softmax()
 
         self.advisor = advisor
+        self.args = args
 
     def forward(self, x):
         x = self.fc1(x)
@@ -74,7 +74,10 @@ class reinforce(nn.Module):
             advice = advice.detach().numpy()
         else:
             advice = [1.0, 1.0, 1.0, 1.0]
-        mixed = actor*advice
+        if self.args.intersection:
+            mixed = actor*advice # policy intersection
+        else:
+            mixed = actor+advice # policy union
         mixed /= mixed.sum()
         action = np.random.choice([0, 1, 2, 3], p=mixed)
 
@@ -87,7 +90,6 @@ class reinforce(nn.Module):
         return probs[a]
 
 
-
     def update_weight(self, states, actions, rewards, optimizer):
         G = Variable(torch.Tensor([0]))
         # for each step of the episode t = T - 1, ..., 0
@@ -95,17 +97,22 @@ class reinforce(nn.Module):
         for s_t, a_t, r_tt in zip(states[::-1], actions[::-1], rewards[::-1]):
             G = Variable(torch.Tensor([r_tt])) + GAMMA * G
             # learning correction
-            if self.advisor != None and LC:
+            if self.advisor != None and self.args.lc:
                 s_t = Variable(torch.Tensor([s_t]))
                 advice = get_probas(s_t, self.advisor)
                 actor = get_probas(s_t, self)
-                mixed = actor+advice
+                if self.args.intersection:
+                    mixed = actor*advice
+                else:
+                    mixed = actor+advice
                 mixed /= mixed.sum()
                 mixed_proba = mixed[a_t]
                 loss = (-1.0) * G * torch.log(mixed_proba)
             else:
-                loss = (-1.0) * G * torch.log(self.pi(s_t, a_t))
-            # update policy parameter \theta
+                if self.args.bad: # only concerns training advisors
+                    loss = G * torch.log(self.pi(s_t, a_t)) # update policy parameter \theta -> makes good advisor
+                else:
+                    loss = (-1.0) * G * torch.log(self.pi(s_t, a_t)) #-> makes bad advisor
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -113,17 +120,32 @@ class reinforce(nn.Module):
 
 def main():
 
-    f = open("out-lunarlander-sum"+str(random.random()).strip('0.'), 'w')
-    env = gym.make('LunarLander-v2')
 
-    advisor = torch.load("advisor-lunarlander", map_location=DEVICE)
-    #advisor = None
+    parser = argparse.ArgumentParser(description="Transfer Learning with PPO: advisors are supported")
 
-    agent = reinforce(advisor, env)
+    parser.add_argument("--env", required=True, type=str, help="Gym environment to use")
+    parser.add_argument("--episodes", default=50000, type=int, help="total_timesteps")
+    parser.add_argument("--name", type=str, default='', help="Experiment name")
+    parser.add_argument("--save", type=str, help="Basename of saved weight files. If not given, nothing is saved")
+    parser.add_argument("--advisor", type=str, default=None, help="model zip file of the policy that is going to be loaded and used as advisors")
+    parser.add_argument("--lc", type=int, default=0, help="using learnign correctio or not")
+    parser.add_argument("--bad", type=int, default=0, help="learning a bad advisor instead of a good one")
+    parser.add_argument("--intersection", type=int, default=0, help="policy intersection used, then policy union")
+
+    args = parser.parse_args()
+
+    f = open(args.name+str(random.random()).strip('0.'), 'w')
+    env = gym.make(args.env)
+    if args.advisor != None:
+        advisor = torch.load(args.advisor, map_location=DEVICE)
+    else:
+        advisor = None
+
+    agent = reinforce(advisor, args, env)
     optimizer = optim.Adam(agent.parameters(), lr=ALPHA)
 
 
-    for i_episode in range(MAX_EPISODES):
+    for i_episode in range(args.episodes):
 
         state = env.reset()
 
@@ -152,7 +174,8 @@ def main():
                 break
 
         agent.update_weight(states, actions, rewards, optimizer)
-        #torch.save(agent, "advisor-grid1")
+        if args.save:
+            torch.save(agent, args.save)
 
     env.close()
 
