@@ -108,10 +108,10 @@ class reinforce(nn.Module):
                 s_t = Variable(torch.Tensor([s_t]))
                 advice = get_probas(s_t, self.advisor)
                 actor = get_probas(s_t, self)
-                if self.args.intersection:
-                    mixed = actor*advice
-                else:
+                if self.args.union:
                     mixed = actor+advice
+                else:
+                    mixed = actor*advice
                 mixed /= mixed.sum()
                 mixed_proba = mixed[a_t]
                 loss = (-1.0) * G * torch.log(mixed_proba)
@@ -137,7 +137,7 @@ def main():
     parser.add_argument("--advisor", type=str, default=None, help="model zip file of the policy that is going to be loaded and used as advisors")
     parser.add_argument("--lc", type=int, default=0, help="using learnign correctio or not")
     parser.add_argument("--bad", type=int, default=0, help="learning a bad advisor instead of a good one")
-    parser.add_argument("--intersection", type=int, default=0, help="policy intersection used, then policy union")
+    parser.add_argument("--union", type=int, default=0, help="policy union used, rather than policy union")
 
     args = parser.parse_args()
 
