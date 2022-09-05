@@ -14,14 +14,19 @@ import torch.autograd as autograd
 from torch.autograd import Variable
 import argparse
 
-import gym_envs
-
 DEVICE = torch.device('cpu')
 
 MAX_TIMESTEPS = 108000
 
 ALPHA = 1e-6
 GAMMA = 0.99
+
+
+gym.envs.registration.register(
+    id='MyGrid-v0',
+    entry_point='myGrid:myGrid',
+    kwargs={'y' : 11, 'x' : 9} # 20 18
+)
 
 def get_probas(state, agent):
     probs = agent.forward(state)
@@ -42,6 +47,7 @@ class reinforce(nn.Module):
         aspace = [aspace]
         num_actions = int(np.prod([a.n for a in aspace]))
         print('Number of actions:', num_actions)
+        self.num_actions = num_actions
 
 
         self.fc1 = nn.Linear(state_shape, 128)
@@ -71,15 +77,16 @@ class reinforce(nn.Module):
         actor = actor.detach().numpy()
         if self.advisor != None:
             advice = get_probas(state, self.advisor)
+            advice+=0.001
             advice = advice.detach().numpy()
         else:
-            advice = [1.0, 1.0, 1.0, 1.0]
+            advice = np.ones(self.num_actions)
         if self.args.intersection:
             mixed = actor*advice # policy intersection
         else:
             mixed = actor+advice # policy union
         mixed /= mixed.sum()
-        action = np.random.choice([0, 1, 2, 3], p=mixed)
+        action = np.random.choice([a for a in range(self.num_actions)], p=mixed)
 
         return action
 
@@ -121,10 +128,10 @@ class reinforce(nn.Module):
 def main():
 
 
-    parser = argparse.ArgumentParser(description="Transfer Learning with PPO: advisors are supported")
+    parser = argparse.ArgumentParser(description="Transfer Learning with Policy Gradient: advisors are supported")
 
     parser.add_argument("--env", required=True, type=str, help="Gym environment to use")
-    parser.add_argument("--episodes", default=50000, type=int, help="total_timesteps")
+    parser.add_argument("--episodes", default=50000, type=int, help="episodes")
     parser.add_argument("--name", type=str, default='', help="Experiment name")
     parser.add_argument("--save", type=str, help="Basename of saved weight files. If not given, nothing is saved")
     parser.add_argument("--advisor", type=str, default=None, help="model zip file of the policy that is going to be loaded and used as advisors")
